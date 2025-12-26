@@ -1,0 +1,105 @@
+# Projeto Terraform – Static Assets na AWS
+
+## 1. Como executar o projeto
+
+### Pré-requisitos
+
+* AWS CLI configurado (`aws configure`)
+* Terraform >= 1.x instalado
+* Conta AWS com permissões para S3, CloudFront e IAM
+
+### Passo a passo
+
+```bash
+# Clonar o repositório
+git clone https://github.com/Wbarbosa98/challenge-zrp.git
+cd challenge-zrp
+
+# Inicializar o Terraform
+terraform init
+
+# Validar a infraestrutura (sem criar recursos)
+terraform plan
+
+# (Opcional) Aplicar a infraestrutura
+terraform apply
+```
+
+> Observação: para fins de teste técnico, a validação foi feita com `terraform plan`, garantindo que a infraestrutura está consistente antes de qualquer criação de recursos.
+
+---
+
+## 2. Decisões técnicas
+
+### Uso de S3 para assets estáticos
+
+O Amazon S3 foi utilizado como origem dos arquivos estáticos por ser altamente disponível, escalável e de baixo custo para esse tipo de workload.
+
+### CloudFront como CDN
+
+O CloudFront foi adotado para distribuir o conteúdo globalmente, reduzindo latência e melhorando a performance de acesso aos arquivos estáticos.
+
+### Por que OAC (Origin Access Control) em vez de OAI (Origin Access Identity)?
+
+* O **OAC** é a abordagem mais recente recomendada pela AWS.
+* Oferece integração mais segura e flexível com políticas IAM modernas.
+* Permite melhor controle de acesso ao bucket S3, eliminando dependências legadas do OAI.
+* Está alinhado com boas práticas atuais e projetos novos.
+
+### Infraestrutura como Código (Terraform)
+
+O Terraform foi escolhido para garantir:
+
+* Reprodutibilidade
+* Versionamento da infraestrutura
+* Facilidade de manutenção e auditoria
+
+---
+
+## 3. Diagrama da Arquitetura
+
+```mermaid
+graph TD
+    User[Usuário / Browser]
+    User -->|HTTPS| CF[Amazon CloudFront]
+    CF -->|OAC| S3[S3 Bucket - Static Assets]
+```
+
+**Fluxo:**
+
+1. O usuário acessa o conteúdo via HTTPS.
+2. O CloudFront recebe a requisição.
+3. O CloudFront acessa o bucket S3 usando OAC.
+4. O conteúdo estático é entregue ao usuário.
+
+---
+
+## 4. Sugestões de melhoria
+
+Caso houvesse mais tempo ou orçamento, as seguintes melhorias poderiam ser implementadas:
+
+* **Pipeline CI/CD**
+
+  * Automatizar `terraform plan` e `terraform apply` via GitHub Actions.
+
+* **Versionamento de objetos no S3**
+
+  * Habilitar versionamento para rollback de arquivos.
+
+* **WAF (Web Application Firewall)**
+
+  * Proteger a distribuição CloudFront contra ataques comuns.
+
+* **Logs e observabilidade**
+
+  * Habilitar logs do CloudFront e métricas no CloudWatch.
+
+* **Ambientes separados**
+
+  * Criar módulos Terraform para `dev`, `staging` e `prod`.
+
+---
+
+## 5. Considerações finais
+
+Este projeto demonstra boas práticas de Cloud, DevOps e Infraestrutura como Código, utilizando serviços gerenciados da AWS e recursos modernos recomendados pela plataforma.
